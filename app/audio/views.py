@@ -7,8 +7,11 @@ from flask import (request,
                    send_file,
                    send_from_directory,
                    safe_join,
-                   abort)
+                   abort,
+                   url_for,
+                   redirect)
 from werkzeug.utils import secure_filename
+from .bass_boost import export_bass_boosted
 
 
 ALLOWED_EXTENSIONS = set(['mp3', 'aac', 'wav', 'flac'])
@@ -50,9 +53,11 @@ def upload_audio():
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         file.save(current_app.config["AUDIO_UPLOADS"].joinpath(filename))
-        resp = jsonify({'message': 'File successfully uploaded'})
-        resp.status_code = 201
-        return resp
+        export_bass_boosted(current_app.config['AUDIO_UPLOADS'], filename)
+        # resp = jsonify({'message': 'File successfully uploaded'})
+        # resp.status_code = 201
+        return redirect(url_for('.download_audio', filename=(filename.replace(".mp3",
+                                                    "") + "-export.mp3")))
     else:
         resp = jsonify(
             {'message': 'Allowed file types are mp3, aac, wav, flac'})
@@ -63,6 +68,6 @@ def upload_audio():
 @audio.route('/download/<filename>')
 def download_audio(filename):
     try:
-        return send_from_directory(current_app.config["AUDIO_UPLOADS"], filename=filename, as_attachment=True)
+        return send_from_directory(current_app.config["AUDIO_EXPORTS"], filename=filename, as_attachment=True)
     except FileNotFoundError:
         abort(404)

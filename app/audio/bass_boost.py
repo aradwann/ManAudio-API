@@ -4,9 +4,10 @@ import numpy as np
 import math
 from pathlib import Path
 
-song_dir = Path(__file__).parent.parent.parent.absolute().joinpath(
-    'media/audio/uploads')  # "songs"
-print(song_dir)
+
+# Path(__file__).parent.parent.parent.absolute().joinpath(
+#     'media/audio/uploads')  # "songs"
+# print(song_dir)
 attenuate_db = 0
 accentuate_db = 2
 
@@ -24,7 +25,14 @@ def bass_line_freq(track):
     return bass_factor
 
 
-for filename in listdir(song_dir):
+# for filename in listdir(song_dir):
+def export_bass_boosted(song_dir, filename):
+    """functio the returns a bass boosted track 
+
+    Args:
+        song_dir (path): a path for the directory containing the audio file
+        filename (string): the name of the audio file
+    """
     sample = AudioSegment.from_mp3(str(song_dir) + "/" + filename)
     filtered = sample.low_pass_filter(
         bass_line_freq(sample.get_array_of_samples()))
@@ -32,4 +40,4 @@ for filename in listdir(song_dir):
     combined = (sample - attenuate_db).overlay(filtered + accentuate_db)
     combined.export(Path(__file__).parent.parent.parent.absolute().joinpath(
         'media/audio/exports/' + (filename.replace(".mp3",
-                                                 "") + "-export.mp3")), format="mp3")
+                                                    "") + "-export.mp3")), format="mp3")

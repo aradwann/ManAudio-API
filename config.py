@@ -19,7 +19,8 @@ class Config:
 
     AUDIO_UPLOADS = Path(__file__).parent.absolute().joinpath(
         'media/audio/uploads')
-
+    AUDIO_EXPORTS = Path(__file__).parent.absolute().joinpath(
+        'media/audio/exports')
     SESSION_COOKIE_SECURE = True
 
 
