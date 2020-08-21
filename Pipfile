@@ -17,6 +17,8 @@ flask-migrate = "*"
 flask-bcrypt = "*"
 pydub = "*"
 numpy = "*"
+redis = "*"
+rq = "*"
 
 [requires]
 python_version = "3.8"
