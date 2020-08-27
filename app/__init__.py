@@ -2,11 +2,19 @@ import os
 
 from flask import Flask
 import config
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from flask_bcrypt import Bcrypt
 
-# creating an app factory function to register blueprints with it and 
+# creating an app factory function to register blueprints with it and
 # accessing the app in the project through a proxy of created app called
-# current app and this approach help us make the project more scalable 
-# and maintainable 
+# current app and this approach help us make the project more scalable
+# and maintainable
+
+db = SQLAlchemy()
+migrate = Migrate()
+bcrypt = Bcrypt()
+
 
 def create_app(testing=False):
     """Application factory
@@ -26,6 +34,11 @@ def create_app(testing=False):
         app.config.from_object(config.DevelopmentConfig)
     else:
         app.config.from_object(config.ProductionConfig)
+
+    # setting up extensions to the app
+    db.init_app(app)
+    migrate.init_app(app, db)
+    bcrypt.init_app(app)
 
     # Import and register blueprints
     from app.audio import audio
