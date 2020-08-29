@@ -1,4 +1,4 @@
-from flask import Blueprint, current_app
+from flask import Blueprint
 
 
 audio = Blueprint('audio', __name__)
