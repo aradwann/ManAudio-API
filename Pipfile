@@ -7,7 +7,6 @@ verify_ssl = true
 pylint = "*"
 autopep8 = "*"
 pytest = "*"
-pylint-flask = "*"
 
 [packages]
 flask = "*"
@@ -19,6 +18,7 @@ pydub = "*"
 numpy = "*"
 redis = "*"
 rq = "*"
+pyjwt = "*"
 
 [requires]
 python_version = "3.8"
