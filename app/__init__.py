@@ -44,4 +44,7 @@ def create_app(testing=False):
     from app.audio import audio
     app.register_blueprint(audio, url_prefix='/audio')
 
+    from app.auth import auth
+    app.register_blueprint(auth, url_prefix='/auth')
+
     return app
