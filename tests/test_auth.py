@@ -1,6 +1,6 @@
 import json
 import time
-from app.models import User
+from app.models import User, BlacklistToken
 from app import db
 
 
@@ -240,3 +240,84 @@ def test_invalid_logout(client):
     assert data['status'] == 'fail'
     assert data['message'] == 'Signature expired, Please login again.'
     assert response.status_code == 401
+
+
+def test_valid_blacklisted_token_logout(client):
+    """ Test for logout after a valid token gets blacklisted """
+    # user registration
+    resp_register = client.post(
+        '/auth/register',
+        data=json.dumps(dict(
+            email='joe@gmail.com',
+            password='123456'
+        )),
+        content_type='application/json',
+    )
+    data_register = json.loads(resp_register.data.decode())
+    assert data_register['status'] == 'success'
+    assert data_register['message'] == 'Successfully registered.'
+    assert data_register['auth_token']
+    assert resp_register.content_type == 'application/json'
+    assert resp_register.status_code, 201
+    # user login
+    resp_login = client.post(
+        '/auth/login',
+        data=json.dumps(dict(
+            email='joe@gmail.com',
+            password='123456'
+        )),
+        content_type='application/json'
+    )
+    data_login = json.loads(resp_login.data.decode())
+    assert data_login['status'] == 'success'
+    assert data_login['message'] == 'Successfully logged in.'
+    assert data_login['auth_token']
+    assert resp_login.content_type == 'application/json'
+    assert resp_login.status_code, 200
+    # blacklist a valid token
+    blacklist_token = BlacklistToken(
+        token=json.loads(resp_login.data.decode())['auth_token'])
+    db.session.add(blacklist_token)
+    db.session.commit()
+    # blacklisted valid token logout
+    response = client.post(
+        '/auth/logout',
+        headers=dict(
+            Authorization='Bearer ' + json.loads(
+                resp_login.data.decode()
+            )['auth_token']
+        )
+    )
+    data = json.loads(response.data.decode())
+    assert data['status'] == 'fail'
+    assert data['message'] == 'Token blacklisted. Please log in again.'
+    assert response.status_code, 401
+
+
+def test_valid_blacklisted_token_user(client):
+    """ Test for user status with a blacklisted valid token """
+    resp_register = client.post(
+        '/auth/register',
+        data=json.dumps(dict(
+            email='joe@gmail.com',
+            password='123456'
+        )),
+        content_type='application/json'
+    )
+    # blacklist a valid token
+    blacklist_token = BlacklistToken(
+        token=json.loads(resp_register.data.decode())['auth_token'])
+    db.session.add(blacklist_token)
+    db.session.commit()
+    response = client.get(
+        '/auth/status',
+        headers=dict(
+            Authorization='Bearer ' + json.loads(
+                resp_register.data.decode()
+            )['auth_token']
+        )
+    )
+    data = json.loads(response.data.decode())
+    assert data['status'] == 'fail'
+    assert data['message'] == 'Token blacklisted. Please log in again.'
+    assert response.status_code, 401
