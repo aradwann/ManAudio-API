@@ -1,7 +1,7 @@
 from . import auth
 from app import db, bcrypt
 from flask import request, make_response, jsonify
-from app.models import User, BlackListToken
+from app.models import User, BlacklistToken
 
 
 @auth.route('/register', methods=['POST'])
@@ -150,7 +150,7 @@ def logout():
             response = User.decode_auth_token(auth_token)
             if not isinstance(response, str):
                 # mark token as blacklisted
-                blacklist_token = BlackListToken(token=auth_token)
+                blacklist_token = BlacklistToken(token=auth_token)
                 try:
                     # insert token
                     db.session.add(blacklist_token)
