@@ -3,7 +3,7 @@ from app import db, bcrypt
 from flask import request, make_response, jsonify
 from app.models import User, BlacklistToken
 from .decorators import get_token_auth_header
-from .errors import AuthError
+from .errors import AuthError, InternalServerError
 
 
 @auth.route('/register', methods=['POST'])
@@ -33,19 +33,16 @@ def register():
                 'auth_token': auth_token.decode()
             }
             return make_response(jsonify(response_object)), 201
-        except Exception as e:
-            print(e)
-            response_object = {
-                'success': False,
-                'message': 'Some error occurred. Please try again.'
-            }
-            return make_response(jsonify(response_object)), 401
+        except AuthError:
+            raise AuthError(
+                status_code=401,
+                message='Some error occurred. Please try again.'
+            )
     else:
-        response_object = {
-            'success': False,
-            'message': 'User already exists. Please Log in.',
-        }
-        return make_response(jsonify(response_object)), 202
+        raise AuthError(
+            status_code=202,
+            message='User already exists. Please Log in.',
+        )
 
 
 @auth.route('/login', methods=['POST'])
@@ -71,31 +68,25 @@ def login():
                     }
                     return make_response(jsonify(response_object)), 200
             else:
-                response_object = {
-                    'success': False,
-                    'message': 'Wrong password.'
-                }
-                return make_response(jsonify(response_object)), 401
+                raise AuthError(
+                    status_code=401,
+                    message='Wrong password.'
+                )
         else:
-            response_object = {
-                'success': False,
-                'message': 'User does not exist.'
-            }
-            return make_response(jsonify(response_object)), 401
-
-    except Exception as e:
-        print(e)
-        response_object = {
-            'success': False,
-            'message': 'Try again',
-        }
-        return make_response(jsonify(response_object)), 500
+            raise AuthError(
+                status_code=401,
+                message='User does not exist.'
+            )
+    except InternalServerError:
+        raise InternalServerError(
+            status_code=500,
+            message='there is an error! Try again',
+        )
 
 
 @auth.route('/status', methods=['GET'])
 def status():
     """get the user details of the currently logged in user
-
     Returns:
         response: user details
     """
@@ -115,63 +106,49 @@ def status():
                 }
             }
             return make_response(jsonify(response_object)), 200
-        response_object = {
-            'success': False,
-            'message': resp
-        }
-        return make_response(jsonify(response_object)), 401
+        raise AuthError(
+            status_code=401,
+            message=resp
+        )
     else:
-        response_object = {
-            'success': False,
-            'message': 'Provide a valid auth token.'
-        }
-        return make_response(jsonify(response_object)), 401
+        raise AuthError(
+            status_code=401,
+            message='Provide a valid auth token.'
+        )
 
 
 @auth.route('/logout', methods=['POST'])
 def logout():
     # get the auth token
-    auth_header = request.headers.get('Authorization')
-    if auth_header:
-        try:
-            auth_token = auth_header.split(" ")[1]
-        except IndexError:
-            response_object = {
-                'success': False,
-                'message': 'Bearer token malformed.'
-            }
-            return make_response(jsonify(response_object)), 401
+    auth_token = get_token_auth_header()
 
-        if auth_token:
-            response = User.decode_auth_token(auth_token)
-            if not isinstance(response, str):
-                # mark token as blacklisted
-                blacklist_token = BlacklistToken(token=auth_token)
-                try:
-                    # insert token
-                    db.session.add(blacklist_token)
-                    db.session.commit()
-                    response_object = {
-                        'success': True,
-                        'message': 'Successfully logged out.'
-                    }
-                    return make_response(jsonify(response_object)), 200
-                except Exception as e:
-                    print(e)
-                    response_object = {
-                        'success': False,
-                        'message': e
-                    }
-                    return make_response(jsonify(response_object)), 200
-            else:
+    if auth_token:
+        response = User.decode_auth_token(auth_token)
+        if not isinstance(response, str):
+            # mark token as blacklisted
+            blacklist_token = BlacklistToken(token=auth_token)
+            try:
+                # insert token
+                db.session.add(blacklist_token)
+                db.session.commit()
                 response_object = {
-                    'success': False,
-                    'message': response
+                    'success': True,
+                    'message': 'Successfully logged out.'
                 }
-                return make_response(jsonify(response_object)), 401
+                return make_response(jsonify(response_object)), 200
+            except Exception as e:
+                print(e)
+                raise AuthError(
+                    status_code=200,
+                    message=e
+                )
         else:
-            response_object = {
-                'success': False,
-                'message': 'Provide a valid auth token.'
-            }
-            return make_response(jsonify(response_object)), 403
+            raise AuthError(
+                status_code=401,
+                message=response
+            )
+    else:
+        raise AuthError(
+            status_code=403,
+            message='Provide a valid auth token.'
+        )
