@@ -2,6 +2,8 @@ from . import auth
 from app import db, bcrypt
 from flask import request, make_response, jsonify
 from app.models import User, BlacklistToken
+from .decorators import get_token_auth_header
+from .errors import AuthError
 
 
 @auth.route('/register', methods=['POST'])
@@ -26,7 +28,7 @@ def register():
             # generate the auth token
             auth_token = user.encode_auth_token(user.id)
             response_object = {
-                'status': 'success',
+                'success': True,
                 'message': 'Successfully registered.',
                 'auth_token': auth_token.decode()
             }
@@ -34,13 +36,13 @@ def register():
         except Exception as e:
             print(e)
             response_object = {
-                'status': 'fail',
+                'success': False,
                 'message': 'Some error occurred. Please try again.'
             }
             return make_response(jsonify(response_object)), 401
     else:
         response_object = {
-            'status': 'fail',
+            'success': False,
             'message': 'User already exists. Please Log in.',
         }
         return make_response(jsonify(response_object)), 202
@@ -63,20 +65,20 @@ def login():
                 auth_token = user.encode_auth_token(user.id)
                 if auth_token:
                     response_object = {
-                        'status': 'success',
+                        'success': True,
                         'message': 'Successfully logged in.',
                         'auth_token': auth_token.decode()
                     }
                     return make_response(jsonify(response_object)), 200
             else:
                 response_object = {
-                    'status': 'fail',
+                    'success': False,
                     'message': 'Wrong password.'
                 }
                 return make_response(jsonify(response_object)), 401
         else:
             response_object = {
-                'status': 'fail',
+                'success': False,
                 'message': 'User does not exist.'
             }
             return make_response(jsonify(response_object)), 401
@@ -84,7 +86,7 @@ def login():
     except Exception as e:
         print(e)
         response_object = {
-            'status': 'fail',
+            'success': False,
             'message': 'Try again',
         }
         return make_response(jsonify(response_object)), 500
@@ -92,25 +94,19 @@ def login():
 
 @auth.route('/status', methods=['GET'])
 def status():
+    """get the user details of the currently logged in user
+
+    Returns:
+        response: user details
+    """
     # get the auth token
-    auth_header = request.headers.get('Authorization')
-    if auth_header:
-        try:
-            auth_token = auth_header.split(" ")[1]
-        except IndexError:
-            response_object = {
-                'status': 'fail',
-                'message': 'Bearer token malformed.'
-            }
-            return make_response(jsonify(response_object)), 401
-    else:
-        auth_token = ''
+    auth_token = get_token_auth_header()
     if auth_token:
         resp = User.decode_auth_token(auth_token)
         if not isinstance(resp, str):
             user = User.query.filter_by(id=resp).first()
             response_object = {
-                'status': 'success',
+                'success': True,
                 'data': {
                     'user_id': user.id,
                     'email': user.email,
@@ -120,13 +116,13 @@ def status():
             }
             return make_response(jsonify(response_object)), 200
         response_object = {
-            'status': 'fail',
+            'success': False,
             'message': resp
         }
         return make_response(jsonify(response_object)), 401
     else:
         response_object = {
-            'status': 'fail',
+            'success': False,
             'message': 'Provide a valid auth token.'
         }
         return make_response(jsonify(response_object)), 401
@@ -141,7 +137,7 @@ def logout():
             auth_token = auth_header.split(" ")[1]
         except IndexError:
             response_object = {
-                'status': 'fail',
+                'success': False,
                 'message': 'Bearer token malformed.'
             }
             return make_response(jsonify(response_object)), 401
@@ -156,26 +152,26 @@ def logout():
                     db.session.add(blacklist_token)
                     db.session.commit()
                     response_object = {
-                        'status': 'success',
+                        'success': True,
                         'message': 'Successfully logged out.'
                     }
                     return make_response(jsonify(response_object)), 200
                 except Exception as e:
                     print(e)
                     response_object = {
-                        'status': 'fail',
+                        'success': False,
                         'message': e
                     }
                     return make_response(jsonify(response_object)), 200
             else:
                 response_object = {
-                    'status': 'fail',
+                    'success': False,
                     'message': response
                 }
                 return make_response(jsonify(response_object)), 401
         else:
             response_object = {
-                'status': 'fail',
+                'success': False,
                 'message': 'Provide a valid auth token.'
             }
             return make_response(jsonify(response_object)), 403
