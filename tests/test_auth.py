@@ -30,7 +30,7 @@ def test_registration(client):
 
     response = register_user(client)
     data = json.loads(response.data.decode())
-    assert (data['success'] == True)
+    assert (data['success'])
     assert (data['message'] == 'Successfully registered.')
     assert (data['auth_token'])
     assert (response.content_type == 'application/json')
@@ -42,7 +42,7 @@ def test_registered_with_already_registered_user(client, user):
 
     response = register_user(client)
     data = json.loads(response.data.decode())
-    assert (data['success'] == False)
+    assert (not data['success'])
     assert (
         data['message'] == 'User already exists. Please Log in.')
     assert (response.content_type == 'application/json')
@@ -53,7 +53,7 @@ def test_registered_user_login_correct_password(client, user):
     """Test registered user login"""
     response = login_user(client)
     data = json.loads(response.data.decode())
-    assert data['success'] == True
+    assert data['success']
     assert data['message'] == 'Successfully logged in.'
     assert data['auth_token']
     assert response.content_type == 'application/json'
@@ -70,7 +70,7 @@ def test_registered_user_login_wrong_password(client, user):
         )),
         content_type='application/json')
     data = json.loads(response.data.decode())
-    assert data['success'] == False
+    assert not data['success']
     assert data['message'] == 'Wrong password.'
     assert not data.get('auth_token')
     assert response.content_type == 'application/json'
@@ -81,7 +81,7 @@ def test_non_registered_user_login(client):
     """Test non registered user login"""
     response = login_user(client)
     data = json.loads(response.data.decode())
-    assert data['success'] == False
+    assert not data['success']
     assert data['message'] == 'User does not exist.'
     assert not data.get('auth_token')
     assert response.content_type == 'application/json'
@@ -102,7 +102,7 @@ def test_user_status(client):
         )
     )
     data = json.loads(response.data.decode())
-    assert data['success'] == True
+    assert data['success']
     assert data['data'] is not None
     assert data['data']['email'] == 'joe@gmail.com'
     assert data['data']['admin'] == 'true' or 'false'
@@ -115,7 +115,7 @@ def test_valid_logout(client):
     # register user
     register_response = register_user(client)
     data = json.loads(register_response.data.decode())
-    assert (data['success'] == True)
+    assert (data['success'])
     assert (data['message'] == 'Successfully registered.')
     assert (data['auth_token'])
     assert (register_response.content_type == 'application/json')
@@ -124,7 +124,7 @@ def test_valid_logout(client):
     # login user
     login_response = login_user(client)
     data = json.loads(login_response.data.decode())
-    assert data['success'] == True
+    assert data['success']
     assert data['message'] == 'Successfully logged in.'
     assert data['auth_token']
     assert login_response.content_type == 'application/json'
@@ -141,7 +141,7 @@ def test_valid_logout(client):
         )
     )
     data = json.loads(response.data.decode())
-    assert data['success'] == True
+    assert data['success']
     assert data['message'] == 'Successfully logged out.'
     assert response.status_code == 200
 
@@ -152,7 +152,7 @@ def test_invalid_logout(client):
     # register user
     register_response = register_user(client)
     data = json.loads(register_response.data.decode())
-    assert (data['success'] == True)
+    assert (data['success'])
     assert (data['message'] == 'Successfully registered.')
     assert (data['auth_token'])
     assert (register_response.content_type == 'application/json')
@@ -161,7 +161,7 @@ def test_invalid_logout(client):
     # login user
     login_response = login_user(client)
     data = json.loads(login_response.data.decode())
-    assert data['success'] == True
+    assert data['success']
     assert data['message'] == 'Successfully logged in.'
     assert data['auth_token']
     assert login_response.content_type == 'application/json'
@@ -181,7 +181,7 @@ def test_invalid_logout(client):
         )
     )
     data = json.loads(response.data.decode())
-    assert data['success'] == False
+    assert not data['success']
     assert data['message'] == 'Signature expired, Please login again.'
     assert response.status_code == 401
 
@@ -191,7 +191,7 @@ def test_valid_blacklisted_token_logout(client):
     # user registration
     resp_register = register_user(client)
     data_register = json.loads(resp_register.data.decode())
-    assert data_register['success'] == True
+    assert data_register['success']
     assert data_register['message'] == 'Successfully registered.'
     assert data_register['auth_token']
     assert resp_register.content_type == 'application/json'
@@ -199,7 +199,7 @@ def test_valid_blacklisted_token_logout(client):
     # user login
     resp_login = login_user(client)
     data_login = json.loads(resp_login.data.decode())
-    assert data_login['success'] == True
+    assert data_login['success']
     assert data_login['message'] == 'Successfully logged in.'
     assert data_login['auth_token']
     assert resp_login.content_type == 'application/json'
@@ -219,7 +219,7 @@ def test_valid_blacklisted_token_logout(client):
         )
     )
     data = json.loads(response.data.decode())
-    assert data['success'] == False
+    assert not data['success']
     assert data['message'] == 'Token blacklisted. Please log in again.'
     assert response.status_code, 401
 
@@ -241,6 +241,6 @@ def test_valid_blacklisted_token_user(client):
         )
     )
     data = json.loads(response.data.decode())
-    assert data['success'] == False
+    assert not data['success']
     assert data['message'] == 'Token blacklisted. Please log in again.'
     assert response.status_code, 401
