@@ -2,7 +2,7 @@ from . import auth
 from app import db, bcrypt
 from flask import request, make_response, jsonify
 from app.models import User, BlacklistToken
-from .decorators import get_token_auth_header
+from .decorators import get_token_auth_header, auth_required
 from .errors import AuthError, InternalServerError
 
 
@@ -152,3 +152,14 @@ def logout():
             status_code=403,
             message='Provide a valid auth token.'
         )
+
+
+@auth.route('/headers')
+@auth_required
+def headers(payload):
+    print(payload)
+    response_object = {
+        'success': True,
+        'message': 'Access Granted'
+    }
+    return make_response(jsonify(response_object)), 200

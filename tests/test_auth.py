@@ -106,7 +106,7 @@ def test_user_status(client):
     assert data['data'] is not None
     assert data['data']['email'] == 'joe@gmail.com'
     assert data['data']['admin'] == 'true' or 'false'
-    assert response.status_code, 200
+    assert response.status_code == 200
 
 
 def test_valid_logout(client):
@@ -195,7 +195,7 @@ def test_valid_blacklisted_token_logout(client):
     assert data_register['message'] == 'Successfully registered.'
     assert data_register['auth_token']
     assert resp_register.content_type == 'application/json'
-    assert resp_register.status_code, 201
+    assert resp_register.status_code == 201
     # user login
     resp_login = login_user(client)
     data_login = json.loads(resp_login.data.decode())
@@ -203,7 +203,7 @@ def test_valid_blacklisted_token_logout(client):
     assert data_login['message'] == 'Successfully logged in.'
     assert data_login['auth_token']
     assert resp_login.content_type == 'application/json'
-    assert resp_login.status_code, 200
+    assert resp_login.status_code == 200
     # blacklist a valid token
     blacklist_token = BlacklistToken(
         token=json.loads(resp_login.data.decode())['auth_token'])
@@ -221,7 +221,7 @@ def test_valid_blacklisted_token_logout(client):
     data = json.loads(response.data.decode())
     assert not data['success']
     assert data['message'] == 'Token blacklisted. Please log in again.'
-    assert response.status_code, 401
+    assert response.status_code == 401
 
 
 def test_valid_blacklisted_token_user(client):
@@ -243,4 +243,42 @@ def test_valid_blacklisted_token_user(client):
     data = json.loads(response.data.decode())
     assert not data['success']
     assert data['message'] == 'Token blacklisted. Please log in again.'
-    assert response.status_code, 401
+    assert response.status_code == 401
+
+
+def test_headers_success(client):
+    # register user
+    reg_response = register_user(client)
+    # get registered user status
+    response = client.get(
+        '/auth/headers',
+        headers=dict(
+            Authorization='Bearer ' + json.loads(
+                reg_response.data.decode()
+            )['auth_token']
+        )
+    )
+    data = json.loads(response.data.decode())
+    assert data['success']
+    assert data['message'] == 'Access Granted'
+    assert response.status_code == 200
+
+
+def test_headers_failure(client):
+    # register user
+    reg_response = register_user(client)
+    # sleep 6 secs to make the token expire 'its lifetime is 5 secs'
+    time.sleep(6)
+    # get registered user status
+    response = client.get(
+        '/auth/headers',
+        headers=dict(
+            Authorization='Bearer ' + json.loads(
+                reg_response.data.decode()
+            )['auth_token']
+        )
+    )
+    data = json.loads(response.data.decode())
+    assert not data['success']
+    assert data['message'] == 'Signature expired, Please login again.'
+    assert response.status_code == 401
