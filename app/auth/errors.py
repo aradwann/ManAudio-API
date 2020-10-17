@@ -30,15 +30,21 @@ def auth_error(error):
 def not_found(error):
     return jsonify({
         "success": False,
-        "error": 404,
         "message": "not_found"
     }), 404
+
+
+@auth.app_errorhandler(405)
+def method_not_allowed(error):
+    return jsonify({
+        "success": False,
+        "message": "method not allowed"
+    }), 405
 
 
 @auth.app_errorhandler(422)
 def unprocessable(error):
     return jsonify({
         "success": False,
-        "error": 422,
         "message": "unprocessable"
     }), 422
