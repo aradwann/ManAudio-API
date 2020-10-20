@@ -1,15 +1,12 @@
 from pydub import AudioSegment
-from os import listdir
 import numpy as np
 import math
-from pathlib import Path
+from flask import current_app
 
 
-# Path(__file__).parent.parent.parent.absolute().joinpath(
-#     'media/audio/uploads')  # "songs"
-# print(song_dir)
 attenuate_db = 0
 accentuate_db = 2
+
 
 def bass_line_freq(track):
     sample_track = list(track)
@@ -27,7 +24,7 @@ def bass_line_freq(track):
 
 # for filename in listdir(song_dir):
 def export_bass_boosted(song_dir, filename):
-    """functio the returns a bass boosted track 
+    """functio the returns a bass boosted track
 
     Args:
         song_dir (path): a path for the directory containing the audio file
@@ -38,6 +35,6 @@ def export_bass_boosted(song_dir, filename):
         bass_line_freq(sample.get_array_of_samples()))
 
     combined = (sample - attenuate_db).overlay(filtered + accentuate_db)
-    combined.export(Path(__file__).parent.parent.parent.absolute().joinpath(
-        'media/audio/exports/' + (filename.replace(".mp3",
-                                                    "") + "-export.mp3")), format="mp3")
+    file_name = filename.replace(".mp3", "-export.mp3")
+    export_dir = current_app.config["AUDIO_EXPORTS"].joinpath(file_name)
+    combined.export(export_dir, format="mp3")
