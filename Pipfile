@@ -20,6 +20,7 @@ numpy = "*"
 redis = "*"
 rq = "*"
 pyjwt = "*"
+flask-rq2 = "*"
 
 [requires]
 python_version = "3.8"
