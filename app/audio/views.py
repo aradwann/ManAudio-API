@@ -9,6 +9,7 @@ from werkzeug.utils import secure_filename
 from .audio_bass_boost import export_bass_boosted
 
 from app import rq
+from app.auth.decorators import auth_required
 
 ALLOWED_EXTENSIONS = set(['mp3', 'aac', 'wav', 'flac'])
 
@@ -20,6 +21,7 @@ def allowed_file(filename):
 
 
 @audio.route("/", methods=['GET', 'POST'])
+@auth_required
 def index():
     # validate that the incoming request body is JSON
     if request.is_json:
