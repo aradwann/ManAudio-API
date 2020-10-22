@@ -18,7 +18,7 @@ class InternalServerError(AuthError):
 
 
 @auth.app_errorhandler(InternalServerError)
-@auth.errorhandler(AuthError)
+@auth.app_errorhandler(AuthError)
 def auth_error(error):
     return jsonify({
         'success': False,
