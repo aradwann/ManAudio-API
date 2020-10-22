@@ -2,7 +2,7 @@ from pydub import AudioSegment
 import numpy as np
 import math
 from flask import current_app
-
+from app import rq
 
 attenuate_db = 0
 accentuate_db = 2
@@ -22,9 +22,10 @@ def bass_line_freq(track):
     return bass_factor
 
 
-# for filename in listdir(song_dir):
+@rq.job
 def export_bass_boosted(song_dir, filename):
-    """functio the returns a bass boosted track
+    """function the returns a bass boosted track
+    with a its filename appended with '-export'
 
     Args:
         song_dir (path): a path for the directory containing the audio file
