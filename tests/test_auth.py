@@ -1,7 +1,11 @@
 import json
 import time
+import pytest
+from flask import current_app
 from app.models import BlacklistToken
 from app import db
+from app.auth.decorators import get_token_auth_header
+from app.auth.errors import AuthError
 
 
 def register_user(client):
@@ -23,6 +27,51 @@ def login_user(client):
             password='123456'
         )),
         content_type='application/json')
+
+
+def test_get_token_no_header(client):
+    """ Test AuthError exception raised
+    when there is no Authorization header """
+    with current_app.test_request_context():
+        with pytest.raises(AuthError) as e:
+            assert get_token_auth_header()
+            assert e.status_code == 401
+            assert e.message == 'Authorization header is expected.'
+
+
+def test_get_token_no_bearer(client):
+    """ Test AuthError exception raised
+    when Authorization header is not Bearer"""
+    with current_app.test_request_context(headers={'Authorization': ''}):
+        with pytest.raises(AuthError) as e:
+            assert get_token_auth_header()
+            assert e.status_code == 401
+            msg = 'Authorization header must start with "Bearer".'
+            assert e.message == msg
+
+
+def test_get_token_no_bearer_token(client):
+    """Test AuthError exception raised
+    when Authorization header token is comprimised
+    """
+    with current_app.test_request_context(
+            headers={'Authorization': 'Bearer '}):
+        with pytest.raises(AuthError) as e:
+            assert get_token_auth_header()
+            assert e.status_code == 401
+            assert e.message == 'Token not found.'
+
+
+def test_get_token_with_correct_format(client):
+    """Test get token from Bearer Authorization header
+    when it is correctly formatted
+    """
+    jwt = 'fsadfenafad'
+    bearer_jwt = 'Bearer fsadfenafad'
+    with current_app.test_request_context(
+            headers={'Authorization': bearer_jwt}):
+        token = get_token_auth_header()
+        assert token == jwt
 
 
 def test_registration(client):
