@@ -37,7 +37,11 @@ def get_token_auth_header():
 
 
 def auth_required(func):
-    """require the request sender to be authenticated"""
+    """
+    require the request sender to have a valid JWT
+    Passes the payload to the wrapped function
+    Payload here is the user's id
+    """
     @wraps(func)
     def wrapper_auth_required(*args, **kwargs):
         token = get_token_auth_header()
