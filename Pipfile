@@ -8,6 +8,8 @@ pylint = "*"
 autopep8 = "*"
 pytest = "*"
 flake8 = "*"
+pytest-cov = "*"
+fakeredis = "*"
 
 [packages]
 flask = "*"

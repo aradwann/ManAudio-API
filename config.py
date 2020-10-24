@@ -48,3 +48,4 @@ class TestingConfig(Config):
     PRESERVE_CONTEXT_ON_EXCEPTION = False
 
     SESSION_COOKIE_SECURE = False
+    RQ_CONNECTION_CLASS = 'fakeredis.FakeStrictRedis'
