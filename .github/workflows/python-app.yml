@@ -1,38 +1,39 @@
-name: Example workflow for Codecov
+name: Test ManAudio-API
 on: [push]
 jobs:
-  run:
-    runs-on: ${{ matrix.os }}
+  build:
+    name: Python${{ matrix.python-version }}/Redis${{ matrix.redis-version }}/redis-py${{ matrix.redis-py-version }}
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
-    env:
-      OS: ${{ matrix.os }}
-      PYTHON: '3.8'
+        python-version: [3.7, 3.8.3]
+        redis-version: [5, 6]
+        redis-py-version: [3.5.0]
+
     steps:
     - uses: actions/checkout@master
-    - name: Setup Python
+    - name: Setup Python ${{ matrix.python-version }}
       uses: actions/setup-python@master
       with:
-        python-version: 3.8
-    - name: Generate coverage report
+        python-version: ${{ matrix.python-version }}
+        
+    - name: Start Redis
+      uses: supercharge/redis-github-action@1.1.0
+      with:
+        redis-version: ${{ matrix.redis-version }}
+        
+    - name: Install dependencies
       run: |
-        pip install pipenv
+        python -m pip install --upgrade pip
         pipenv install --dev --system --skip-lock
-        export FLASK_APP=run
-        export FLASK_ENV=development
-        pytest --cov=./ --cov-report=xml
+        
+    - name: Test with pytest
+      run: |
+        RUN_SLOW_TESTS_TOO=1 pytest --cov=./ --cov-report=xml --durations=3
+        
+    
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
       with:
-        token: ${{ secrets.CODECOV_TOKEN }}
         file: ./coverage.xml
-        files: ./coverage1.xml,./coverage2.xml
-        directory: ./coverage/reports/
-        flags: unittests
-        env_vars: OS,PYTHON
-        name: codecov-umbrella
-        fail_ci_if_error: true
-        path_to_write_report: ./coverage/codecov_report.gz
-        verbose: true
-
+        
