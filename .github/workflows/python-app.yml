@@ -18,8 +18,8 @@ jobs:
     - name: Generate coverage report
       run: |
         pip install pipenv
-        pipenv lock -r --dev
-        pip install -r requirements.txt
+        pipenv shell
+        pipenv install --dev
         export FLASK_APP=run
         export FLASK_ENV=development
         pytest --cov=./ --cov-report=xml
