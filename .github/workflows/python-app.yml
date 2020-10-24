@@ -18,8 +18,10 @@ jobs:
     - name: Generate coverage report
       run: |
         pip install pipenv
-        pipenv install
-        pipenv shell
+        pipenv lock -r --dev
+        pip install -r requirements.txt
+        export FLASK_APP=run
+        export FLASK_ENV=development
         pytest --cov=./ --cov-report=xml
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
