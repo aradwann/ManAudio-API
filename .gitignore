@@ -142,6 +142,3 @@ media/
 
 # sqlite
 *.sqlite
-
-# tests/audio
-tests/audio
