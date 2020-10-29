@@ -38,7 +38,7 @@ class User(db.Model):
         try:
             payload = {
                 'exp': datetime.datetime.utcnow() + datetime.timedelta(
-                    days=0, seconds=5),
+                    days=0, seconds=current_app.config.get('JWT_EXP')),
                 'iat': datetime.datetime.utcnow(),
                 'sub': user_id
             }
