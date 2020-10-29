@@ -1,6 +1,9 @@
 # ManAudio-API
 Flask API to manipulate and process audio that make use of JWT authentication using Redis, RQ and more
 
+![Build status](https://github.com/elmaghallawy/ManAudio-API/workflows/Test%20ManAudio-API/badge.svg)
+[![codecov](https://codecov.io/gh/elmaghallawy/ManAudio-API/branch/master/graph/badge.svg?token=N1TFAILF4L)](undefined)
+
 ## Getting Started
 
 This Project uses **Pipenv** for environment and dependency management.
